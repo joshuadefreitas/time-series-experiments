@@ -223,3 +223,50 @@ def generate_garch_like(
     )
     df.index.name = "t"
     return df
+
+def generate_structural_break_series(
+    n: int = 800,
+    break_point: int = 400,
+    mu1: float = 0.0,
+    mu2: float = 3.0,
+    phi: float = 0.5,
+    sigma: float = 1.0,
+    seed: int | None = None,
+) -> pd.DataFrame:
+    """
+    Generate an AR(1)-type series with a single structural break in the mean.
+
+    For t < break_point:
+        x_t = mu1 + phi * (x_{t-1} - mu1) + eps_t
+    For t >= break_point:
+        x_t = mu2 + phi * (x_{t-1} - mu2) + eps_t
+
+    Returns:
+        DataFrame with columns:
+            - value: the series
+            - regime: 0 (pre-break) or 1 (post-break)
+    """
+    rng = np.random.default_rng(seed)
+
+    if break_point <= 0 or break_point >= n:
+        raise ValueError("break_point must be between 0 and n-1")
+
+    x = np.zeros(n)
+    regimes = np.zeros(n, dtype=int)
+
+    # initialize at first mean
+    x[0] = mu1 + rng.normal(scale=sigma)
+
+    for t in range(1, n):
+        if t < break_point:
+            mu = mu1
+            regimes[t] = 0
+        else:
+            mu = mu2
+            regimes[t] = 1
+
+        x[t] = mu + phi * (x[t - 1] - mu) + rng.normal(scale=sigma)
+
+    df = pd.DataFrame({"value": x, "regime": regimes})
+    df.index.name = "t"
+    return df
