@@ -36,11 +36,19 @@ def generate_ar1(n: int = 500, phi: float = 0.7, sigma: float = 1.0,
         pandas Series with integer index [0, 1, ..., n-1] named "t" and
         series name indicating AR(1) parameter value.
     
+    Raises:
+        ValueError: If n <= 0 or sigma < 0.
+    
     Example:
         >>> # Generate stationary AR(1) with persistence 0.8
         >>> series = generate_ar1(n=1000, phi=0.8, sigma=0.5, seed=42)
         >>> print(f"Mean: {series.mean():.3f}, Std: {series.std():.3f}")
     """
+    if n <= 0:
+        raise ValueError(f"Sample size n must be positive, got {n}")
+    if sigma < 0:
+        raise ValueError(f"Noise standard deviation sigma must be non-negative, got {sigma}")
+    
     # Initialize random number generator for reproducible simulations
     rng = np.random.default_rng(seed)
     
@@ -59,16 +67,72 @@ def generate_ar1(n: int = 500, phi: float = 0.7, sigma: float = 1.0,
     return pd.Series(x, index=pd.RangeIndex(n, name="t"), name=f"ar1_phi_{phi}")
 
 def generate_trend_seasonal(
-    n=500,
-    trend_slope=0.01,
-    period=24,
-    amplitude=1.0,
-    sigma=0.5,
-    seed=None,
-):
+    n: int = 500,
+    trend_slope: float = 0.01,
+    period: int = 24,
+    amplitude: float = 1.0,
+    sigma: float = 0.5,
+    seed: Optional[int] = None,
+) -> pd.Series:
+    """
+    Simulate a time series with linear trend and seasonal component.
+    
+    Generates a univariate time series following the specification:
+        y_t = trend_slope * t + amplitude * sin(2πt / period) + ε_t
+        where ε_t ~ i.i.d. N(0, σ²)
+    
+    This process combines a deterministic linear trend with a periodic seasonal
+    pattern and additive Gaussian noise. Useful for testing forecasting methods
+    on non-stationary series with known structure.
+    
+    Args:
+        n: Sample size (number of observations to generate). Must be positive.
+        trend_slope: Slope of the linear trend component. Default 0.01.
+        period: Length of seasonal cycle (e.g., 24 for hourly daily pattern,
+            12 for monthly annual pattern). Must be positive.
+        amplitude: Amplitude of the seasonal sine wave. Default 1.0.
+        sigma: Standard deviation of innovation shocks ε_t. Must be non-negative.
+            Default 0.5.
+        seed: Random seed for reproducibility. If None, uses system entropy.
+    
+    Returns:
+        pandas Series with integer index [0, 1, ..., n-1] named "t" and
+        series name "trend_seasonal".
+    
+    Raises:
+        ValueError: If n <= 0, period <= 0, or sigma < 0.
+    
+    Example:
+        >>> # Generate hourly data with daily seasonality (24-hour cycle)
+        >>> series = generate_trend_seasonal(n=1000, period=24, seed=42)
+        >>> # Generate monthly data with annual seasonality
+        >>> series = generate_trend_seasonal(n=120, period=12, seed=42)
+    """
+    if n <= 0:
+        raise ValueError(f"Sample size n must be positive, got {n}")
+    if period <= 0:
+        raise ValueError(f"Seasonal period must be positive, got {period}")
+    if sigma < 0:
+        raise ValueError(f"Noise standard deviation sigma must be non-negative, got {sigma}")
+    
+    # Initialize random number generator for reproducible simulations
     rng = np.random.default_rng(seed)
+    
+    # Generate time index
     t = np.arange(n)
+    
+    # Linear trend component
     trend = trend_slope * t
+    
+    # Seasonal component: sinusoidal pattern
     seasonal = amplitude * np.sin(2 * np.pi * t / period)
+    
+    # Additive noise
     noise = rng.normal(loc=0.0, scale=sigma, size=n)
-    return pd.Series(trend + seasonal + noise, name="trend_seasonal")
+    
+    # Combine components
+    return pd.Series(
+        trend + seasonal + noise,
+        index=pd.RangeIndex(n, name="t"),
+        name="trend_seasonal"
+    )

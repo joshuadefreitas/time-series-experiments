@@ -83,7 +83,8 @@ def seasonal_naive_forecast(series: pd.Series, season_length: int,
         Point forecast (value from s periods ago) as float.
     
     Raises:
-        ValueError: If series length is less than one seasonal cycle.
+        ValueError: If series is empty, series length is less than one seasonal
+            cycle, or season_length is invalid.
     
     Example:
         >>> # Monthly data with annual seasonality
@@ -93,7 +94,16 @@ def seasonal_naive_forecast(series: pd.Series, season_length: int,
         For h > s, this repeats the value from T+h-s rather than from
         the most recent occurrence of that seasonal position.
     """
+    if series.empty:
+        raise ValueError("Series is empty")
+    if season_length <= 0:
+        raise ValueError(f"Season length must be positive, got {season_length}")
+    if not isinstance(season_length, int):
+        raise TypeError(f"Season length must be integer, got {type(season_length).__name__}")
     if len(series) < season_length:
-        raise ValueError("Series length smaller than one season.")
+        raise ValueError(
+            f"Series length ({len(series)}) is smaller than one seasonal cycle "
+            f"({season_length})."
+        )
     # Extract value from one full seasonal cycle ago
     return float(series.iloc[-season_length])

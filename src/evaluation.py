@@ -10,6 +10,7 @@ References:
     an analysis and review. International Journal of Forecasting, 16(4), 437-450.
 """
 
+import warnings
 from typing import Callable, Dict
 
 import numpy as np
@@ -51,7 +52,8 @@ def rolling_forecast_origin(
             - y_pred: Forecasted value
     
     Raises:
-        ValueError: If series length is insufficient for specified parameters.
+        ValueError: If series length is insufficient for specified parameters,
+            or if horizon or initial_window are invalid.
     
     Example:
         >>> results = rolling_forecast_origin(
@@ -61,32 +63,77 @@ def rolling_forecast_origin(
         ...     initial_window=100
         ... )
         >>> metrics = compute_metrics(results)
+    
+    Note:
+        If forecast_func raises an exception for a particular time step, a warning
+        is issued and that time step is skipped. The function continues with
+        subsequent time steps. This allows evaluation to proceed even if some
+        forecasts fail (e.g., due to model convergence issues).
     """
+    if series.empty:
+        raise ValueError("Cannot evaluate: input series is empty")
+    if horizon <= 0:
+        raise ValueError(f"Forecast horizon must be positive, got {horizon}")
+    if not isinstance(horizon, int):
+        raise TypeError(f"Forecast horizon must be integer, got {type(horizon).__name__}")
+    if initial_window <= 0:
+        raise ValueError(f"Initial window must be positive, got {initial_window}")
+    if not isinstance(initial_window, int):
+        raise TypeError(f"Initial window must be integer, got {type(initial_window).__name__}")
     if len(series) <= initial_window + horizon:
-        raise ValueError("Series too short for given initial_window and horizon.")
+        raise ValueError(
+            f"Series too short for given initial_window ({initial_window}) and "
+            f"horizon ({horizon}). Need at least {initial_window + horizon + 1} "
+            f"observations, got {len(series)}"
+        )
 
     records = []
     index = series.index
+    failed_forecasts = 0
 
     # Iterate through possible forecast origins
     for t in range(initial_window, len(series) - horizon):
         # Training set: all observations up to (but not including) time t
         train_series = series.iloc[:t]
         
-        # Generate h-step ahead forecast from origin t
-        y_pred = forecast_func(train_series, horizon)
-        
-        # Actual value at forecast target time
-        t_forecast = index[t + horizon]
-        y_true = series.iloc[t + horizon]
+        try:
+            # Generate h-step ahead forecast from origin t
+            y_pred = forecast_func(train_series, horizon)
+            
+            # Actual value at forecast target time
+            t_forecast = index[t + horizon]
+            y_true = series.iloc[t + horizon]
 
-        records.append(
-            {
-                "t_train_end": index[t - 1],
-                "t_forecast": t_forecast,
-                "y_true": float(y_true),
-                "y_pred": float(y_pred),
-            }
+            records.append(
+                {
+                    "t_train_end": index[t - 1],
+                    "t_forecast": t_forecast,
+                    "y_true": float(y_true),
+                    "y_pred": float(y_pred),
+                }
+            )
+        except Exception as e:
+            # Log warning and continue with next time step
+            failed_forecasts += 1
+            warnings.warn(
+                f"Forecast failed at time step t={t} (training end={index[t-1]}): {e}. "
+                f"Skipping this forecast.",
+                UserWarning
+            )
+            continue
+
+    if failed_forecasts > 0:
+        warnings.warn(
+            f"Total failed forecasts: {failed_forecasts} out of "
+            f"{len(series) - initial_window - horizon} attempted. "
+            f"Results contain {len(records)} successful forecasts.",
+            UserWarning
+        )
+    
+    if len(records) == 0:
+        raise RuntimeError(
+            "All forecasts failed. Check forecast_func implementation and "
+            "ensure it can handle the provided series."
         )
 
     return pd.DataFrame(records)
@@ -113,11 +160,25 @@ def compute_metrics(results: pd.DataFrame) -> Dict[str, float]:
             - MAPE: Mean Absolute Percentage Error = (100/n)Σ|(y_i - ŷ_i)/y_i|
               (computed only for non-zero actual values, NaN if all zeros)
     
+    Raises:
+        ValueError: If results DataFrame is empty or missing required columns.
+    
     Note:
         MAPE is undefined for zero actual values. Implementation excludes
         such observations from MAPE calculation and returns NaN if no valid
         observations remain.
     """
+    if results.empty:
+        raise ValueError("Cannot compute metrics: results DataFrame is empty")
+    
+    required_columns = ["y_true", "y_pred"]
+    missing_columns = [col for col in required_columns if col not in results.columns]
+    if missing_columns:
+        raise ValueError(
+            f"Results DataFrame missing required columns: {missing_columns}. "
+            f"Found columns: {list(results.columns)}"
+        )
+    
     y_true = results["y_true"].to_numpy()
     y_pred = results["y_pred"].to_numpy()
     errors = y_pred - y_true
