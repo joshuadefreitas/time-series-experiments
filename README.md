@@ -1,155 +1,179 @@
 # Time Series Forecasting Experiments
 
-A comprehensive Python framework for evaluating and comparing time series forecasting models using rigorous statistical methodologies. This repository implements rolling-origin evaluation (time series cross-validation) to assess forecast accuracy across multiple models, from simple baselines to sophisticated ARIMA specifications.
+A structured Python framework for exploring, testing, and understanding forecasting models across different types of time-series behavior. The goal is not only to compare forecasting models, but to understand **how** and **why** they succeed or fail under different data‑generating mechanisms.
 
-## Overview
+The repository is organized like a miniature research pipeline: each experiment highlights a key forecasting concept — from memory and seasonality to volatility, structural breaks, multivariate interactions, and nonlinear dynamics.
 
-This project provides a modular, research-oriented toolkit for time series forecasting experiments. It implements standard forecast evaluation procedures following best practices in the forecasting literature, ensuring fair and reproducible model comparisons through proper temporal validation techniques.
+---
 
-## Features
+## Purpose of the Project
 
-- **Rolling-Origin Evaluation**: Implements walk-forward analysis (time series cross-validation) that respects temporal ordering and provides realistic out-of-sample performance assessment
-- **Multiple Forecasting Models**:
-  - Baseline methods: Naive (random walk) and Mean forecasts
-  - ARIMA models: Flexible ARIMA(p,d,q) and SARIMA specifications via maximum likelihood estimation
-- **Comprehensive Evaluation Metrics**: 
-  - Mean Absolute Error (MAE)
-  - Root Mean Squared Error (RMSE)
-  - Mean Absolute Percentage Error (MAPE)
-- **Synthetic Data Generation**: Utilities for generating AR(1) processes for model validation and Monte Carlo experiments
-- **Visualization**: Automated plotting of forecast vs. actual comparisons
-- **Modular Architecture**: Clean separation of concerns for easy extension and experimentation
+This project helps answer foundational forecasting questions:
+
+* When do simple models outperform complex ones?
+* How does forecast accuracy change with the horizon?
+* How do trend and seasonality affect model behavior?
+* Why are financial returns so difficult to predict?
+* How do regime shifts and structural breaks impact models?
+* Can chaotic systems be forecast at all?
+
+To explore these ideas, the framework includes:
+
+* Controlled **synthetic simulators**
+* Clean **rolling-origin (walk-forward) evaluation**
+* Interpretable **metrics and visualizations**
+* Modular experiments ready to extend to real datasets
+
+---
+
+## Current Capabilities
+
+### Completed Experiments
+
+#### **1. AR(1) Memory + Horizon Dependence**
+
+Illustrates how short-term memory affects forecasting across different horizons.
+
+#### **2. Trend & Seasonality (SARIMA vs Baselines)**
+
+Shows why explicit seasonal modeling matters, and when simple baselines perform well.
+
+#### **3. Volatility Regimes (Mean-Stable, Variance-Unstable)**
+
+Demonstrates that structure often lives in volatility rather than levels.
+
+#### **4. GARCH-like Volatility Clustering**
+
+Synthetic financial returns exhibiting persistent volatility. Highlights why volatility forecasting is often more meaningful than predicting direction.
+
+Each experiment includes:
+
+* Synthetic data generation
+* Model comparison
+* Rolling-origin evaluation
+* Clear, interpretable explanations
+
+---
+
+## Roadmap: Upcoming Milestones
+
+### **Milestone 5 — Structural Breaks**
+
+Study how models behave when the underlying mean shifts. Compare long-window vs short-window approaches.
+
+### **Milestone 6 — Multivariate Forecasting (VAR)**
+
+Explore cross‑series dependence and forecast vector-valued processes.
+
+### **Milestone 7 — Nonlinear Dynamics & Chaos**
+
+Use logistic maps and Lorenz-type systems to show limits of predictability.
+
+### **Phase 2 — Real Data Experiments**
+
+Once synthetic foundations are complete, mirror the experiments using real datasets (e.g., FX returns, electricity demand, macro-economic variables).
+
+### **Phase 3 — Optional Live Forecasting Pipeline**
+
+Add a lightweight engineering layer for automatic data ingestion and scheduled forecasting.
+
+---
 
 ## Project Structure
 
-```
+```text
 time-series-forecasting/
 ├── src/
-│   ├── simulators.py          # Time series data generation (AR processes)
-│   ├── models_basic.py        # Baseline forecasting methods
-│   ├── models_arima.py        # ARIMA/SARIMA model estimation and forecasting
-│   ├── evaluation.py          # Rolling-origin evaluation and metrics
+│   ├── simulators.py          # Synthetic data generators
+│   ├── models_basic.py        # Baseline forecasting models
+│   ├── models_arima.py        # ARIMA & SARIMA forecasting
+│   ├── evaluation.py          # Rolling-origin evaluation & metrics
 │   ├── plots.py               # Visualization utilities
 │   └── experiments/
-│       └── exp_ar1_compare.py # Example experiment comparing models
+│       ├── exp_ar1_horizons.py
+│       ├── exp_trend_seasonal_compare.py
+│       ├── exp_regime_switch_compare.py
+│       └── exp_garch_compare.py
 ├── data/
-│   ├── simulated/            # Generated synthetic time series
-│   └── real/                 # Real-world datasets (placeholder)
+│   ├── simulated/             # Generated synthetic datasets
+│   └── real/                  # Real-world datasets (future)
 ├── outputs/
-│   └── plots/                # Generated forecast comparison plots
-└── requirements.txt          # Python dependencies
+│   └── plots/                 # Forecast comparison visuals
+└── requirements.txt
 ```
+
+---
 
 ## Installation
 
-1. Clone the repository:
 ```bash
 git clone https://github.com/joshuadefreitas/time-series-experiments.git
-cd time-series-forecasting
-```
-
-2. Install dependencies:
-```bash
+cd time-series-experiments
 pip install -r requirements.txt
 ```
 
-## Usage
+---
 
-### Running the Example Experiment
+## Running Experiments
 
-The included experiment compares naive, mean, and ARIMA(1,0,0) forecasts on a simulated AR(1) process:
+Example:
 
 ```bash
-python -m src.experiments.exp_ar1_compare
+python -m src.experiments.exp_ar1_horizons
 ```
 
-This will:
-- Generate a synthetic AR(1) time series (φ=0.7, n=500)
-- Evaluate each model using rolling-origin cross-validation
-- Compute MAE, RMSE, and MAPE metrics
-- Generate comparison plots
-- Display a summary table ranking models by performance
+All experiments follow the same pattern:
 
-### Example Output
+* Generate synthetic data
+* Evaluate models using walk‑forward validation
+* Compute MAE, RMSE, MAPE
+* Produce forecast‑vs‑actual plots
+* Print a structured interpretation
 
-```
-MODEL COMPARISON SUMMARY
-============================================================
-Model                MAE          RMSE         MAPE        
-------------------------------------------------------------
-Naive                1.1820       1.4916       279.2519    
-Mean                 1.1323       1.4438       105.4288    
-ARIMA(1,0,0)         1.0541       1.3297       208.4083    
-
-BEST MODEL BY METRIC:
-------------------------------------------------------------
-  MAE:  ARIMA(1,0,0) (1.0541)
-  RMSE: ARIMA(1,0,0) (1.3297)
-  MAPE: Mean (105.4288)
-```
-
-### Using the Framework
-
-```python
-from src.simulators import generate_ar1
-from src.models_arima import arima_forecast
-from src.evaluation import rolling_forecast_origin, compute_metrics
-
-# Generate synthetic data
-series = generate_ar1(n=500, phi=0.7, sigma=1.0, seed=42)
-
-# Evaluate a model
-results = rolling_forecast_origin(
-    series=series,
-    forecast_func=lambda s, h: arima_forecast(s, h, order=(1, 0, 0)),
-    horizon=1,
-    initial_window=100
-)
-
-# Compute metrics
-metrics = compute_metrics(results)
-print(metrics)  # {'MAE': 1.0541, 'RMSE': 1.3297, 'MAPE': 208.4083}
-```
+---
 
 ## Methodology
 
-### Rolling-Origin Evaluation
+### **Rolling-Origin Evaluation (Walk-Forward Validation)**
 
-The framework implements rolling-origin evaluation (also known as time series cross-validation or walk-forward analysis), which:
+Ensures a realistic and unbiased evaluation by:
 
-1. **Reserves initial training window**: Uses the first `initial_window` observations as the initial training set
-2. **Expanding window approach**: For each time step `t` from `initial_window` to `T-h`:
-   - Trains the model on all observations up to time `t`
-   - Generates an `h`-step ahead forecast
-   - Compares the forecast with the actual value at `t+h`
-3. **Temporal integrity**: Ensures no future information leaks into past forecasts, providing realistic out-of-sample performance estimates
+1. Training on an initial window
+2. Forecasting ahead
+3. Expanding or sliding the window
+4. Repeating across the full series
 
-This approach is the gold standard for time series evaluation and is recommended in forecasting literature (Tashman, 2000; Hyndman & Athanasopoulos, 2021).
+This prevents look-ahead bias and mirrors real-world deployment.
 
-### Evaluation Metrics
+### **Evaluation Metrics**
 
-- **MAE (Mean Absolute Error)**: Average absolute forecast error. Scale-dependent, robust to outliers.
-- **RMSE (Root Mean Squared Error)**: Square root of mean squared errors. Penalizes large errors more heavily than MAE.
-- **MAPE (Mean Absolute Percentage Error)**: Scale-invariant percentage error. Useful for comparing across series with different scales, but unreliable when values are close to zero.
+* **MAE** — Average absolute error
+* **RMSE** — Penalizes larger errors
+* **MAPE** — Percentage error (with caution near zero values)
 
-## Results
+---
 
-The example experiment demonstrates that ARIMA(1,0,0) achieves the best performance on simulated AR(1) data, which is expected since it matches the true data-generating process. The framework enables systematic comparison of model performance across different scenarios and datasets.
+## Why Start with Synthetic Data?
+
+Synthetic experiments provide:
+
+* Full control over the data-generating mechanism
+* Clear illustrations of concepts
+* Ability to replicate, stress-test, and isolate model behavior
+
+Real datasets will be added to mirror these controlled scenarios.
+
+---
 
 ## Dependencies
 
-- `numpy` - Numerical computing
-- `pandas` - Data manipulation and time series handling
-- `scipy` - Statistical functions
-- `statsmodels` - ARIMA model estimation
-- `matplotlib` - Plotting and visualization
+* numpy
+* pandas
+* matplotlib
+* statsmodels
 
-## References
-
-- Tashman, L. J. (2000). Out-of-sample tests of forecasting accuracy: an analysis and review. *International Journal of Forecasting*, 16(4), 437-450.
-- Hyndman, R. J., & Athanasopoulos, G. (2021). *Forecasting: principles and practice* (3rd ed.). OTexts.
+---
 
 ## License
 
-This project is open source and available for educational and research purposes.
-
+Open-source for research and educational use.
