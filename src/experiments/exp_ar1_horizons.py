@@ -1,9 +1,9 @@
 """
 Experiment: Horizon analysis on a simulated AR(1) time series.
 
-We compare Naive, Mean, and ARIMA(1,0,0) forecasts across different
-forecast horizons to understand how model performance degrades as
-we look further into the future.
+We compare Naive, Mean, ARIMA(1,0,0), and a lag-based linear regression
+model across different forecast horizons to understand how model
+performance degrades as we look further into the future.
 
 Run from project root with:
     python -m src.experiments.exp_ar1_horizons
@@ -14,6 +14,7 @@ from pathlib import Path
 from src.simulators import generate_ar1
 from src.models_basic import naive_forecast, mean_forecast
 from src.models_arima import arima_forecast
+from src.models_advanced import lag_regression_forecast
 from src.evaluation import rolling_forecast_origin, compute_metrics
 from src.plots import plot_forecast_results
 
@@ -53,7 +54,6 @@ def main():
         for k, v in metrics_naive.items():
             print(f"  {k}: {v:.4f}")
 
-        # Plot AR(1) naive vs actual for each horizon
         plot_forecast_results(
             res_naive,
             title=f"AR(1) – Naive forecast vs actual (h={h})",
@@ -120,17 +120,43 @@ def main():
             }
         )
 
+        # --- Lag-based linear regression forecast ---
+        res_lagreg = rolling_forecast_origin(
+            series,
+            lambda s, hh: lag_regression_forecast(s, hh, n_lags=20),
+            horizon=h,
+            initial_window=initial_window,
+        )
+        metrics_lagreg = compute_metrics(res_lagreg)
+        print("\nLag-regression (20 lags) forecast metrics:")
+        for k, v in metrics_lagreg.items():
+            print(f"  {k}: {v:.4f}")
+
+        plot_forecast_results(
+            res_lagreg,
+            title=f"AR(1) – Lag-regression (20 lags) forecast vs actual (h={h})",
+            filename=f"ar1_lagreg_h{h}_vs_actual.png",
+        )
+
+        results_summary.append(
+            {
+                "horizon": h,
+                "model": "LagReg (20 lags)",
+                **metrics_lagreg,
+            }
+        )
+
     # 3. Print summary table across horizons
     print("\n" + "=" * 60)
     print("HORIZON ANALYSIS SUMMARY (AR(1))")
     print("=" * 60)
 
-    print(f"\n{'Horizon':<8} {'Model':<15} {'MAE':<12} {'RMSE':<12} {'MAPE':<12}")
+    print(f"\n{'Horizon':<8} {'Model':<20} {'MAE':<12} {'RMSE':<12} {'MAPE':<12}")
     print("-" * 60)
     for record in results_summary:
         print(
             f"{record['horizon']:<8} "
-            f"{record['model']:<15} "
+            f"{record['model']:<20} "
             f"{record['MAE']:<12.4f} "
             f"{record['RMSE']:<12.4f} "
             f"{record['MAPE']:<12.4f}"
@@ -146,7 +172,7 @@ def main():
         subset = [r for r in results_summary if r["horizon"] == h]
         best = min(subset, key=lambda r: r["MAE"])
         print(
-            f"h = {h:<2}  →  {best['model']:<12} "
+            f"h = {h:<2}  →  {best['model']:<18} "
             f"(MAE={best['MAE']:.4f}, RMSE={best['RMSE']:.4f}, MAPE={best['MAPE']:.2f})"
         )
 
@@ -162,16 +188,19 @@ all models see their errors grow:
 
   • At h = 1:
       ARIMA(1,0,0) typically outperforms Naive and Mean, since it matches
-      the underlying data-generating mechanism.
+      the underlying data-generating mechanism. A lag-based regression
+      with enough lags can behave similarly.
 
   • At intermediate horizons (e.g. h = 5, 10):
       The advantage of ARIMA starts to shrink. Errors accumulate and the
-      series gradually "forgets" the initial condition.
+      series gradually "forgets" the initial condition. Differences between
+      ARIMA and lag-regression often become small.
 
   • At long horizons (e.g. h = 20):
       Forecasts converge towards the unconditional mean of the process.
-      Structural details of the AR(1) become less important, and simple
-      models like the Mean forecast can become relatively competitive.
+      Structural details of the AR(1) (and of any linear model on lags)
+      become less important, and simple models like the Mean forecast can
+      be relatively competitive.
 
 The key idea:
   The value of model sophistication depends not just on the structure
