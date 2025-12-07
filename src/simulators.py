@@ -351,3 +351,53 @@ def generate_logistic_map(
     s.index.name = "t"
     s.name = "value"
     return s
+
+def generate_lorenz(
+    n_steps: int = 10000,
+    dt: float = 0.01,
+    sigma: float = 10.0,
+    rho: float = 28.0,
+    beta: float = 8.0 / 3.0,
+    x0: float = 1.0,
+    y0: float = 1.0,
+    z0: float = 1.0,
+) -> pd.DataFrame:
+    """
+    Generate a trajectory of the Lorenz system using simple Euler integration.
+
+    Lorenz system:
+        dx/dt = sigma * (y - x)
+        dy/dt = x * (rho - z) - y
+        dz/dt = x * y - beta * z
+
+    For classic chaotic behaviour, use rho = 28, sigma = 10, beta = 8/3.
+
+    Args:
+        n_steps: number of time steps
+        dt: integration step size
+        sigma, rho, beta: Lorenz parameters
+        x0, y0, z0: initial conditions
+
+    Returns:
+        DataFrame with columns ['x', 'y', 'z'] indexed by step.
+    """
+    xs = np.zeros(n_steps, dtype=float)
+    ys = np.zeros(n_steps, dtype=float)
+    zs = np.zeros(n_steps, dtype=float)
+
+    xs[0], ys[0], zs[0] = x0, y0, z0
+
+    for t in range(1, n_steps):
+        x, y, z = xs[t - 1], ys[t - 1], zs[t - 1]
+
+        dx = sigma * (y - x)
+        dy = x * (rho - z) - y
+        dz = x * y - beta * z
+
+        xs[t] = x + dx * dt
+        ys[t] = y + dy * dt
+        zs[t] = z + dz * dt
+
+    df = pd.DataFrame({"x": xs, "y": ys, "z": zs})
+    df.index.name = "step"
+    return df
