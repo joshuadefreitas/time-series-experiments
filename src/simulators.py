@@ -57,3 +57,18 @@ def generate_ar1(n: int = 500, phi: float = 0.7, sigma: float = 1.0,
     
     # Return as pandas Series with named index for time axis
     return pd.Series(x, index=pd.RangeIndex(n, name="t"), name=f"ar1_phi_{phi}")
+
+def generate_trend_seasonal(
+    n=500,
+    trend_slope=0.01,
+    period=24,
+    amplitude=1.0,
+    sigma=0.5,
+    seed=None,
+):
+    rng = np.random.default_rng(seed)
+    t = np.arange(n)
+    trend = trend_slope * t
+    seasonal = amplitude * np.sin(2 * np.pi * t / period)
+    noise = rng.normal(loc=0.0, scale=sigma, size=n)
+    return pd.Series(trend + seasonal + noise, name="trend_seasonal")
