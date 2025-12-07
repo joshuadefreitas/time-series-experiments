@@ -1,4 +1,4 @@
-# Time Series Forecasting Experiments
+# Time-Series Forecasting Experiments: ARIMA, volatility, structural breaks, VAR, chaos
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![Status](https://img.shields.io/badge/status-active-success)
@@ -9,8 +9,30 @@
 ![Matplotlib](https://img.shields.io/badge/matplotlib-3.x-yellow)
 ![Code Style](https://img.shields.io/badge/code%20style-black-black)
 
-A practical forecasting framework for exploring how different models behave under controlled time-series conditions.  
-The focus is on understanding model behaviour—not just comparing metrics.
+A practical forecasting project focused on understanding how different models behave under controlled conditions.
+
+The experiments cover a wide range of time-series behaviour:
+
+- **ARIMA & SARIMA** (memory, trend, seasonality)
+- **Volatility & Regime Switching**
+- **Structural Breaks**
+- **Multivariate VAR dynamics**
+- **Nonlinear & Chaotic systems** (logistic map, Lorenz attractor)
+
+The goal is to understand *why* models behave the way they do under different data-generating processes, rather than just optimising metrics.
+
+## Key Features
+
+- Modular **synthetic simulators** (AR(1), trend+seasonality, GARCH-like, regime switching, VAR, chaos)
+- Correct **rolling-origin evaluation** (walk‑forward validation)
+- Systematic comparison of baselines vs ARIMA/SARIMA and multivariate approaches
+- Clear documentation in the `docs/` directory:
+  - `lessons.md` — key concepts and takeaways  
+  - `experiments.md` — experiments overview  
+  - `gallery.md` — plot gallery  
+  - `extending.md` — how to add models/experiments  
+
+The project will later expand to **real-world datasets** (e.g., FX returns, macroeconomic series, demand forecasting) using the same experimental structure.
 
 ---
 
