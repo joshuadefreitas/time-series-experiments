@@ -1,8 +1,31 @@
 # Time Series Forecasting Experiments
 
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![Status](https://img.shields.io/badge/status-active-success)
+![License](https://img.shields.io/badge/license-MIT-lightgrey)
+![Focus](https://img.shields.io/badge/focus-time--series%20%7C%20econometrics%20%7C%20simulation-orange)
+
+*A research‑style forecasting framework exploring how models behave under different time-series structures.*
+
 A structured Python framework for exploring, testing, and understanding forecasting models across different types of time-series behavior. The goal is not only to compare forecasting models, but to understand **how** and **why** they succeed or fail under different data‑generating mechanisms.
 
 The repository is organized like a miniature research pipeline: each experiment highlights a key forecasting concept — from memory and seasonality to volatility, structural breaks, multivariate interactions, and nonlinear dynamics.
+
+---
+
+## Table of Contents
+
+* [Purpose](#purpose-of-the-project)
+* [Current Experiments](#current-capabilities)
+* [Sample Plots](#sample-plots)
+* [Roadmap](#roadmap-upcoming-milestones)
+* [Project Structure](#project-structure)
+* [Installation](#installation)
+* [Running Experiments](#running-experiments)
+* [Methodology](#methodology)
+* [Why Synthetic First](#why-start-with-synthetic-data)
+* [Dependencies](#dependencies)
+* [License](#license)
 
 ---
 
@@ -28,6 +51,8 @@ To explore these ideas, the framework includes:
 
 ## Current Capabilities
 
+Here are the core experiments implemented so far — each demonstrating a fundamental forecasting concept.
+
 ### Completed Experiments
 
 #### **1. AR(1) Memory + Horizon Dependence**
@@ -52,6 +77,30 @@ Each experiment includes:
 * Model comparison
 * Rolling-origin evaluation
 * Clear, interpretable explanations
+
+---
+
+## Sample Plots
+
+Below are a few examples of plots generated directly from the experiments:
+
+### **Trend + Seasonality (SARIMA vs Baselines)**
+
+![Trend Seasonality](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/trend_seasonal_sarima_vs_actual.png)
+
+### **AR(1) Horizon Differences**
+
+![AR1 Horizons](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/ar1_h10_vs_actual.png)
+
+### **Regime Switching Process**
+
+![Regime Switching](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/regime_switching_mean_vs_actual.png)
+
+### **GARCH-like Volatility Clustering**
+
+![GARCH Example](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/garch_mean_forecast.png)
+
+These visuals help communicate *how* models deviate from reality under different assumptions — a central lesson in applied forecasting.
 
 ---
 
