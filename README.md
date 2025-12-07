@@ -10,95 +10,162 @@
 ![Code Style](https://img.shields.io/badge/code%20style-black-black)
 
 A practical forecasting framework for exploring how different models behave under controlled time-series conditions.  
-The focus is on understanding **why** models behave as they do — not simply comparing metrics.
+The focus is on understanding model behaviour—not just comparing metrics.
 
 ---
 
-## Executive Summary (for Recruiters)
+## Summary
 
-This project demonstrates practical skills in:
+This project shows how different forecasting models behave under controlled time-series settings. It highlights:
 
-- Forecasting & time‑series modeling  
-- Econometrics and simulation  
-- Rolling‑origin (walk‑forward) model evaluation  
-- Clean, modular Python development  
-- Insightful interpretation of model behaviour  
+- Working with synthetic data to isolate effects and understand model behaviour  
+- Using proper rolling-origin (walk-forward) validation  
+- Simulating different data-generating mechanisms  
+- Comparing baseline, ARIMA/SARIMA, volatility-aware, multivariate, and chaotic settings  
+- Keeping the codebase small, modular, and easy to extend  
 
-It serves as a hands-on sandbox for understanding forecasting challenges in finance, econometrics, and analytics.
+The aim is clarity: how models react when the underlying system changes.
+
+---
+
+## Table of Contents
+
+- [Purpose](#purpose-of-the-project)
+- [Current Experiments](#current-capabilities)
+- [Sample Plots](#sample-plots)
+- [Documentation](#documentation)
+- [Roadmap](#roadmap-upcoming-milestones)
+- [Project Structure](#project-structure)
+- [Installation](#installation)
+- [Running Experiments](#running-experiments)
+- [Methodology](#methodology)
+- [Why Start With Synthetic Data](#why-start-with-synthetic-data)
+- [Dependencies](#dependencies)
+- [License](#license)
 
 ---
 
 ## Purpose of the Project
 
-The goal is to explore and answer questions like:
+The repository is built to answer practical forecasting questions:
 
-- When do simple models beat complex ones?
-- How does forecast horizon change difficulty?
-- Why do trends and seasonality matter so much?
-- Why are financial returns so hard to predict?
-- How do structural breaks affect forecasts?
-- Can chaotic nonlinear systems be forecast at all?
-- When does multivariate modeling actually help?
+- When do simple models outperform complex ones?  
+- How much does forecasting horizon matter?  
+- When does seasonality dominate?  
+- Why are financial returns nearly unpredictable?  
+- What happens when a structural break occurs?  
+- Can chaotic systems be forecast beyond very short horizons?  
+- When does multivariate modelling actually help?
 
-To investigate these questions, the project includes:
+The framework includes:
 
-- Synthetic simulators  
+- Controlled synthetic simulators  
 - Rolling-origin evaluation  
-- A library of forecasting models  
-- Experiments with explanations and visuals  
+- A small library of models  
+- Experiments with interpretable results and plots  
 
 ---
 
 ## Current Capabilities
 
-### 1. AR(1) Memory & Horizon Dependence  
-How predictive power decays as the horizon increases.
+### 1. AR(1) Memory + Horizon Dependence
+How predictive power decays as horizons grow.
 
-### 2. Trend & Seasonality (SARIMA vs Baselines)  
-Shows how explicit seasonal modeling improves forecasts.
+**Script:** `src/experiments/exp_ar1_horizons.py`
 
-### 3. Regime Switching (Variance Shifts)  
-Demonstrates that structure often lies in volatility, not in the mean.
+---
 
-### 4. GARCH-like Volatility Clustering  
+### 2. Trend & Seasonality (SARIMA vs Baselines)
+Importance of modelling explicit seasonal structure.
+
+**Script:** `src/experiments/exp_trend_seasonal_compare.py`
+
+---
+
+### 3. Regime Switching (Variance Shifts)
+Why volatility, not levels, often contains the real structure.
+
+**Script:** `src/experiments/exp_regime_switch_compare.py`
+
+---
+
+### 4. GARCH-like Volatility Clustering
 Synthetic returns with volatility persistence.
 
-### 5. Structural Breaks  
-Changepoints and how rolling vs global models adapt.
+**Script:** `src/experiments/exp_garch_compare.py`
 
-### 6. Multivariate Forecasting (VAR)  
-When joint modeling beats separate univariate models.
+---
 
-### 7. Chaos Experiments  
-- Logistic Map (1D chaos)  
-- Lorenz Attractor (3D chaos projected to xₜ)
+### 5. Structural Breaks
+Shows how global models struggle when the underlying mean shifts.
+
+**Script:** `src/experiments/exp_structural_breaks.py`
+
+---
+
+### 6. Multivariate Forecasting (VAR)
+Captures cross-series interactions missed by univariate models.
+
+**Script:** `src/experiments/exp_var_basic.py`
+
+---
+
+### 7. Chaos & Nonlinear Dynamics
+Logistic maps and the Lorenz system: limits of predictability.
+
+**Scripts:**
+- `src/experiments/exp_logistic_chaos.py`
+- `src/experiments/exp_lorenz_chaos.py`
 
 ---
 
 ## Sample Plots
 
-Plots are available in `outputs/plots/` inside the repository.
+Plots are stored in `outputs/plots/`. A few examples:
+
+### SARIMA on Trend + Seasonality  
+![Trend Seasonality](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/trend_seasonal_sarima_vs_actual.png)
+
+### Horizon Comparison (AR(1))  
+![AR1 Horizon](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/ar1_h10_vs_actual.png)
+
+### Regime Switching  
+![Regime Switching](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/regime_switching_mean_vs_actual.png)
+
+### GARCH-like Volatility  
+![GARCH](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/garch_mean_forecast.png)
+
+### Lorenz Attractor (Chaos)  
+![Lorenz](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/lorenz_attractor.png)
 
 ---
 
-## Roadmap
+## Documentation
 
-### Phase 2 — Real Data
-Applying the same methodology to:
+Additional documentation lives in the `docs/` folder:
 
-- Energy demand  
-- FX returns  
-- Retail sales  
-- Macro indicators  
+- **Key Lessons & Concepts:** `docs/lessons.md`  
+- **Experiment Overview:** `docs/experiments.md`  
+- **Plot Gallery:** `docs/gallery.md`  
+- **Extending the Framework:** `docs/extending.md`  
 
-### Phase 3 — Optional Live Forecasting Pipeline  
-Automated ingestion and reporting.
+These files summarise what each experiment teaches, show selected plots, and explain how to plug in new simulators or models.
+
+---
+
+## Roadmap (Upcoming Milestones)
+
+- More nonlinear systems (e.g. Henon map, Mackey–Glass)  
+- Cointegration and error-correction models  
+- State-space modelling and Kalman filtering  
+- Real-world datasets (electricity, FX, macro indicators)  
+- Optional: light-weight live forecasting pipeline with scheduled runs  
 
 ---
 
 ## Project Structure
 
-```
+```text
 time-series-experiments/
 ├── src/
 │   ├── simulators.py
@@ -120,6 +187,7 @@ time-series-experiments/
 │   └── real/
 ├── outputs/
 │   └── plots/
+├── docs/
 └── requirements.txt
 ```
 
@@ -137,44 +205,44 @@ pip install -r requirements.txt
 
 ## Running Experiments
 
+Example:
+
 ```bash
 python -m src.experiments.exp_ar1_horizons
 ```
 
-All experiments:
+Each experiment:
 
-- generate synthetic data  
-- run rolling-origin evaluation  
-- compute MAE / RMSE / MAPE  
-- save plots  
-- print interpretation  
+- generates synthetic data  
+- runs walk-forward evaluation  
+- stores plots in `outputs/plots/`  
+- prints metrics and a short interpretation  
 
 ---
 
 ## Methodology
 
 ### Rolling-Origin Evaluation  
-A proper forecasting evaluation method that avoids data leakage.
+Expanding or sliding windows ensure no leakage and realistic forecasting conditions.
 
 ### Metrics  
-- **MAE** — absolute error  
-- **RMSE** — penalizes large errors  
-- **MAPE** — percentage error (careful near zero)
+
+- **MAE** — average absolute error  
+- **RMSE** — penalises larger errors  
+- **MAPE** — percentage error (careful near zero and sign changes)  
 
 ---
 
-## Why Synthetic Data?
+## Why Start With Synthetic Data?
 
-Synthetic datasets make it possible to isolate specific forecasting challenges:
+Synthetic datasets make it possible to:
 
-- Memory  
-- Seasonality  
-- Volatility  
-- Structural breaks  
-- Multivariate dynamics  
-- Chaos  
+- Control the data-generating mechanism  
+- Know in advance which model “should” work best  
+- Diagnose why models fail or succeed  
+- Learn structure before dealing with real-world noise  
 
-Later, real datasets will mirror these controlled settings.
+Real datasets can later mirror these controlled settings.
 
 ---
 
@@ -189,4 +257,5 @@ Later, real datasets will mirror these controlled settings.
 
 ## License
 
-MIT License.
+MIT  
+Free for educational and analytical use.
