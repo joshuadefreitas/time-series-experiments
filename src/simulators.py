@@ -136,3 +136,90 @@ def generate_trend_seasonal(
         index=pd.RangeIndex(n, name="t"),
         name="trend_seasonal"
     )
+
+def generate_regime_switching_noise(
+    n: int = 800,
+    sigma_low: float = 0.5,
+    sigma_high: float = 2.0,
+    p_up: float = 0.02,
+    p_down: float = 0.10,
+    seed: int | None = None,
+) -> pd.DataFrame:
+    """
+    Generate a zero-mean process with switching volatility regimes.
+
+    There are two regimes:
+      - 0: low volatility (sigma_low)
+      - 1: high volatility (sigma_high)
+
+    Transitions:
+      - from 0 -> 1 with probability p_up
+      - from 1 -> 0 with probability p_down
+
+    Returns:
+      DataFrame with columns:
+        - 'value': the observed process
+        - 'regime': 0 (low vol) or 1 (high vol)
+    """
+    rng = np.random.default_rng(seed)
+
+    regimes = np.zeros(n, dtype=int)
+    values = np.zeros(n)
+
+    for t in range(1, n):
+        prev_regime = regimes[t - 1]
+        if prev_regime == 0:
+            # chance to jump from low to high
+            regimes[t] = 1 if rng.random() < p_up else 0
+        else:
+            # chance to go back to low
+            regimes[t] = 0 if rng.random() < p_down else 1
+
+    for t in range(n):
+        sigma = sigma_low if regimes[t] == 0 else sigma_high
+        values[t] = rng.normal(loc=0.0, scale=sigma)
+
+    index = pd.RangeIndex(n, name="t")
+    return pd.DataFrame({"value": values, "regime": regimes}, index=index)
+
+def generate_garch_like(
+    n: int = 1000,
+    omega: float = 0.1,
+    alpha: float = 0.2,
+    beta: float = 0.6,
+    seed: int | None = None,
+) -> pd.DataFrame:
+    """
+    Generate a GARCH(1,1)-like process:
+    
+        r_t = sigma_t * epsilon_t
+        sigma_t^2 = omega + alpha * r_{t-1}^2 + beta * sigma_{t-1}^2
+
+    Returns a DataFrame with:
+        - value: the return series
+        - sigma: conditional volatility
+        - var: conditional variance
+    """
+
+    rng = np.random.default_rng(seed)
+
+    r = np.zeros(n)
+    sigma2 = np.zeros(n)
+
+    # Initialize variance
+    sigma2[0] = omega / (1 - alpha - beta)
+    r[0] = rng.normal(scale=np.sqrt(sigma2[0]))
+
+    for t in range(1, n):
+        sigma2[t] = omega + alpha * r[t - 1] ** 2 + beta * sigma2[t - 1]
+        r[t] = rng.normal(scale=np.sqrt(sigma2[t]))
+
+    df = pd.DataFrame(
+        {
+            "value": r,
+            "sigma": np.sqrt(sigma2),
+            "var": sigma2,
+        }
+    )
+    df.index.name = "t"
+    return df
