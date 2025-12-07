@@ -319,3 +319,35 @@ def generate_var1(
     df = pd.DataFrame(x, columns=["y1", "y2"])
     df.index.name = "t"
     return df
+
+def generate_logistic_map(
+    n: int = 800,
+    r: float = 3.9,
+    x0: float = 0.2,
+) -> pd.Series:
+    """
+    Generate a logistic map time series:
+
+        x_{t+1} = r * x_t * (1 - x_t)
+
+    For r in (3.6, 4.0), the system is chaotic: deterministic but
+    highly sensitive to initial conditions.
+
+    Args:
+        n: length of the series
+        r: logistic map parameter (3.9 is a classic chaotic choice)
+        x0: initial value in (0, 1)
+
+    Returns:
+        pd.Series with index t = 0..n-1.
+    """
+    x = np.zeros(n, dtype=float)
+    x[0] = x0
+
+    for t in range(1, n):
+        x[t] = r * x[t - 1] * (1.0 - x[t - 1])
+
+    s = pd.Series(x)
+    s.index.name = "t"
+    s.name = "value"
+    return s
