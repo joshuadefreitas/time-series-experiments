@@ -15,6 +15,15 @@ venv/
 .DS_Store
 
 # Project-specific
-outputs/plots/
-data/real/
-data/simulated/*.csv
+# Ignore generated plots (but allow example outputs to be committed)
+# outputs/plots/*.png
+# Uncomment above to ignore all plots, or keep example plots visible
+
+# Ignore real-world datasets (may contain sensitive/large data)
+# But allow .gitkeep to preserve directory structure
+data/real/*
+!data/real/.gitkeep
+
+# Allow example simulated data to be committed
+# data/simulated/*.csv
+# Uncomment above to ignore all CSV files, or keep example data visible
