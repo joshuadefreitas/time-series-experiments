@@ -270,3 +270,52 @@ def generate_structural_break_series(
     df = pd.DataFrame({"value": x, "regime": regimes})
     df.index.name = "t"
     return df
+
+import numpy as np
+import pandas as pd
+
+def generate_var1(
+    n: int = 800,
+    A: np.ndarray | None = None,
+    mu: np.ndarray | None = None,
+    sigma: float = 1.0,
+    seed: int | None = None,
+) -> pd.DataFrame:
+    """
+    Generate a 2D VAR(1) process:
+
+        x_t = mu + A x_{t-1} + eps_t
+
+    where x_t is 2-dimensional, A is 2x2, eps_t ~ N(0, sigma^2 I).
+
+    Args:
+        n: length of the series
+        A: 2x2 coefficient matrix. If None, a stable default is used.
+        mu: 2D mean vector. If None, zeros are used.
+        sigma: standard deviation of the noise innovations.
+        seed: random seed.
+
+    Returns:
+        DataFrame with columns ['y1', 'y2'].
+    """
+    rng = np.random.default_rng(seed)
+
+    if A is None:
+        # A reasonably stable matrix with some cross-effects
+        A = np.array([[0.5, 0.2],
+                      [-0.3, 0.4]], dtype=float)
+
+    if mu is None:
+        mu = np.array([0.0, 0.0], dtype=float)
+
+    x = np.zeros((n, 2), dtype=float)
+    # start near the mean
+    x[0] = mu + rng.normal(scale=sigma, size=2)
+
+    for t in range(1, n):
+        eps = rng.normal(scale=sigma, size=2)
+        x[t] = mu + A @ x[t - 1] + eps
+
+    df = pd.DataFrame(x, columns=["y1", "y2"])
+    df.index.name = "t"
+    return df
