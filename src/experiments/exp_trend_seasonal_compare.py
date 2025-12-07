@@ -10,7 +10,7 @@ from pathlib import Path
 
 from src.simulators import generate_trend_seasonal
 from src.models_basic import naive_forecast, mean_forecast, seasonal_naive_forecast
-from src.models_arima import arima_forecast
+from src.models_arima import arima_forecast, sarima_forecast
 from src.evaluation import rolling_forecast_origin, compute_metrics
 from src.plots import plot_forecast_results
 
@@ -113,7 +113,32 @@ def main():
         filename="trend_seasonal_arima_vs_actual.png",
     )
 
-    # 6. Summary comparison
+    # 6. SARIMA – explicitly modeling seasonality
+    res_sarima = rolling_forecast_origin(
+        series,
+        lambda s, h: sarima_forecast(
+            s,
+            h,
+            order=(1, 0, 0),
+            seasonal_order=(0, 1, 1, period),
+        ),
+        horizon=horizon,
+        initial_window=initial_window,
+        max_forecasts=30,  # only evaluate last 50 points to keep it fast
+    )
+    metrics_sarima = compute_metrics(res_sarima)
+    print("\nSARIMA(1,0,0)x(0,1,1,%d) forecast metrics:" % period)
+    for k, v in metrics_sarima.items():
+        print(f"  {k}: {v:.4f}")
+
+    plot_forecast_results(
+        res_sarima,
+        title=f"Trend+Seasonal – SARIMA forecast vs actual",
+        filename="trend_seasonal_sarima_vs_actual.png",
+    )
+
+
+    # 7. Summary comparison
     print("\n" + "="*60)
     print("MODEL COMPARISON SUMMARY")
     print("="*60)
@@ -123,6 +148,8 @@ def main():
     print(f"{'Mean':<25} {metrics_mean['MAE']:<12.4f} {metrics_mean['RMSE']:<12.4f} {metrics_mean['MAPE']:<12.4f}")
     print(f"{'Seasonal Naive':<25} {metrics_seasonal['MAE']:<12.4f} {metrics_seasonal['RMSE']:<12.4f} {metrics_seasonal['MAPE']:<12.4f}")
     print(f"{'ARIMA(2,0,0)':<25} {metrics_arima['MAE']:<12.4f} {metrics_arima['RMSE']:<12.4f} {metrics_arima['MAPE']:<12.4f}")
+    print(f"{'SARIMA':<25} {metrics_sarima['MAE']:<12.4f} {metrics_sarima['RMSE']:<12.4f} {metrics_sarima['MAPE']:<12.4f}")
+    
     
     # Find best model for each metric
     print("\n" + "-"*60)
@@ -133,7 +160,8 @@ def main():
         'Naive': metrics_naive,
         'Mean': metrics_mean,
         'Seasonal Naive': metrics_seasonal,
-        'ARIMA(2,0,0)': metrics_arima
+        'ARIMA(2,0,0)': metrics_arima,
+        'SARIMA': metrics_sarima,
     }
     
     best_mae = min(models.items(), key=lambda x: x[1]['MAE'])

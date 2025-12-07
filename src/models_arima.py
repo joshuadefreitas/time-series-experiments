@@ -98,8 +98,40 @@ def arima_forecast(
     result = fit_arima(series, order=order, seasonal_order=seasonal_order)
     
     # Generate recursive h-step ahead forecast path
-    # For h > 1, uses forecasted values as inputs for subsequent steps
     forecast = result.forecast(steps=horizon)
     
     # Return point forecast at final horizon step
     return float(forecast.iloc[-1])
+
+
+def sarima_forecast(
+    series: pd.Series,
+    horizon: int = 1,
+    order: Tuple[int, int, int] = (1, 0, 0),
+    seasonal_order: Tuple[int, int, int, int] = (0, 1, 1, 12),
+) -> float:
+    """
+    Convenience wrapper for seasonal ARIMA (SARIMA).
+
+    This is identical to arima_forecast(), but with a more natural
+    default seasonal_order and a name that makes intent explicit.
+
+    Args:
+        series: In-sample time series for model estimation.
+        horizon: Forecast horizon (steps ahead).
+        order: Non-seasonal ARIMA order (p, d, q).
+        seasonal_order: Seasonal order (P, D, Q, s), where:
+            - P: seasonal AR order
+            - D: seasonal differencing order
+            - Q: seasonal MA order
+            - s: seasonal period (e.g. 12 for monthly, 24 for hourly, etc.)
+
+    Returns:
+        Point forecast at horizon h as float.
+    """
+    return arima_forecast(
+        series=series,
+        horizon=horizon,
+        order=order,
+        seasonal_order=seasonal_order,
+    )
