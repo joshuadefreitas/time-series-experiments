@@ -12,59 +12,35 @@ import numpy as np
 import pandas as pd
 
 
+# -------------------------------------------------------------------
+# AR(1)
+# -------------------------------------------------------------------
+
 def generate_ar1(n: int = 500, phi: float = 0.7, sigma: float = 1.0,
                  x0: float = 0.0, seed: Optional[int] = None) -> pd.Series:
     """
     Simulate a first-order autoregressive (AR(1)) process.
-    
-    Generates a univariate AR(1) time series following the specification:
-        x_t = φ * x_{t-1} + ε_t
-        where ε_t ~ i.i.d. N(0, σ²)
-    
-    The process is stationary if |φ| < 1. For φ = 1, it becomes a random walk.
-    
-    Args:
-        n: Sample size (number of observations to generate).
-        phi: Autoregressive coefficient. For stationarity, require |φ| < 1.
-            Default 0.7 produces a moderately persistent stationary process.
-        sigma: Standard deviation of innovation shocks ε_t. Default 1.0.
-        x0: Initial value x_0 for the process. Default 0.0 (unconditional mean
-            for stationary process with zero mean innovations).
-        seed: Random seed for reproducibility. If None, uses system entropy.
-    
-    Returns:
-        pandas Series with integer index [0, 1, ..., n-1] named "t" and
-        series name indicating AR(1) parameter value.
-    
-    Raises:
-        ValueError: If n <= 0 or sigma < 0.
-    
-    Example:
-        >>> # Generate stationary AR(1) with persistence 0.8
-        >>> series = generate_ar1(n=1000, phi=0.8, sigma=0.5, seed=42)
-        >>> print(f"Mean: {series.mean():.3f}, Std: {series.std():.3f}")
     """
     if n <= 0:
         raise ValueError(f"Sample size n must be positive, got {n}")
     if sigma < 0:
         raise ValueError(f"Noise standard deviation sigma must be non-negative, got {sigma}")
-    
-    # Initialize random number generator for reproducible simulations
+
     rng = np.random.default_rng(seed)
-    
-    # Generate innovation sequence: white noise shocks
     eps = rng.normal(loc=0.0, scale=sigma, size=n)
-    
-    # Initialize array and set initial condition
+
     x = np.zeros(n)
     x[0] = x0
-    
-    # Recursively generate AR(1) process: x_t = φ * x_{t-1} + ε_t
+
     for t in range(1, n):
         x[t] = phi * x[t - 1] + eps[t]
-    
-    # Return as pandas Series with named index for time axis
+
     return pd.Series(x, index=pd.RangeIndex(n, name="t"), name=f"ar1_phi_{phi}")
+
+
+# -------------------------------------------------------------------
+# Trend + seasonal
+# -------------------------------------------------------------------
 
 def generate_trend_seasonal(
     n: int = 500,
@@ -75,38 +51,7 @@ def generate_trend_seasonal(
     seed: Optional[int] = None,
 ) -> pd.Series:
     """
-    Simulate a time series with linear trend and seasonal component.
-    
-    Generates a univariate time series following the specification:
-        y_t = trend_slope * t + amplitude * sin(2πt / period) + ε_t
-        where ε_t ~ i.i.d. N(0, σ²)
-    
-    This process combines a deterministic linear trend with a periodic seasonal
-    pattern and additive Gaussian noise. Useful for testing forecasting methods
-    on non-stationary series with known structure.
-    
-    Args:
-        n: Sample size (number of observations to generate). Must be positive.
-        trend_slope: Slope of the linear trend component. Default 0.01.
-        period: Length of seasonal cycle (e.g., 24 for hourly daily pattern,
-            12 for monthly annual pattern). Must be positive.
-        amplitude: Amplitude of the seasonal sine wave. Default 1.0.
-        sigma: Standard deviation of innovation shocks ε_t. Must be non-negative.
-            Default 0.5.
-        seed: Random seed for reproducibility. If None, uses system entropy.
-    
-    Returns:
-        pandas Series with integer index [0, 1, ..., n-1] named "t" and
-        series name "trend_seasonal".
-    
-    Raises:
-        ValueError: If n <= 0, period <= 0, or sigma < 0.
-    
-    Example:
-        >>> # Generate hourly data with daily seasonality (24-hour cycle)
-        >>> series = generate_trend_seasonal(n=1000, period=24, seed=42)
-        >>> # Generate monthly data with annual seasonality
-        >>> series = generate_trend_seasonal(n=120, period=12, seed=42)
+    Simulate a series with trend + seasonal component.
     """
     if n <= 0:
         raise ValueError(f"Sample size n must be positive, got {n}")
@@ -114,28 +59,24 @@ def generate_trend_seasonal(
         raise ValueError(f"Seasonal period must be positive, got {period}")
     if sigma < 0:
         raise ValueError(f"Noise standard deviation sigma must be non-negative, got {sigma}")
-    
-    # Initialize random number generator for reproducible simulations
+
     rng = np.random.default_rng(seed)
-    
-    # Generate time index
+
     t = np.arange(n)
-    
-    # Linear trend component
     trend = trend_slope * t
-    
-    # Seasonal component: sinusoidal pattern
     seasonal = amplitude * np.sin(2 * np.pi * t / period)
-    
-    # Additive noise
     noise = rng.normal(loc=0.0, scale=sigma, size=n)
-    
-    # Combine components
+
     return pd.Series(
         trend + seasonal + noise,
         index=pd.RangeIndex(n, name="t"),
-        name="trend_seasonal"
+        name="trend_seasonal",
     )
+
+
+# -------------------------------------------------------------------
+# Regime-switching volatility
+# -------------------------------------------------------------------
 
 def generate_regime_switching_noise(
     n: int = 800,
@@ -146,20 +87,7 @@ def generate_regime_switching_noise(
     seed: int | None = None,
 ) -> pd.DataFrame:
     """
-    Generate a zero-mean process with switching volatility regimes.
-
-    There are two regimes:
-      - 0: low volatility (sigma_low)
-      - 1: high volatility (sigma_high)
-
-    Transitions:
-      - from 0 -> 1 with probability p_up
-      - from 1 -> 0 with probability p_down
-
-    Returns:
-      DataFrame with columns:
-        - 'value': the observed process
-        - 'regime': 0 (low vol) or 1 (high vol)
+    Zero-mean process with switching volatility regimes.
     """
     rng = np.random.default_rng(seed)
 
@@ -167,12 +95,9 @@ def generate_regime_switching_noise(
     values = np.zeros(n)
 
     for t in range(1, n):
-        prev_regime = regimes[t - 1]
-        if prev_regime == 0:
-            # chance to jump from low to high
+        if regimes[t - 1] == 0:
             regimes[t] = 1 if rng.random() < p_up else 0
         else:
-            # chance to go back to low
             regimes[t] = 0 if rng.random() < p_down else 1
 
     for t in range(n):
@@ -182,6 +107,11 @@ def generate_regime_switching_noise(
     index = pd.RangeIndex(n, name="t")
     return pd.DataFrame({"value": values, "regime": regimes}, index=index)
 
+
+# -------------------------------------------------------------------
+# GARCH(1,1)-like generator
+# -------------------------------------------------------------------
+
 def generate_garch_like(
     n: int = 1000,
     omega: float = 0.1,
@@ -190,23 +120,19 @@ def generate_garch_like(
     seed: int | None = None,
 ) -> pd.DataFrame:
     """
-    Generate a GARCH(1,1)-like process:
-    
-        r_t = sigma_t * epsilon_t
-        sigma_t^2 = omega + alpha * r_{t-1}^2 + beta * sigma_{t-1}^2
-
-    Returns a DataFrame with:
-        - value: the return series
-        - sigma: conditional volatility
-        - var: conditional variance
+    Generate a GARCH(1,1)-like process.
     """
+    if alpha + beta >= 1:
+        raise ValueError(
+            "GARCH(1,1) requires alpha + beta < 1 for stationarity. "
+            f"Got alpha + beta = {alpha + beta:.3f}"
+        )
 
     rng = np.random.default_rng(seed)
 
     r = np.zeros(n)
     sigma2 = np.zeros(n)
 
-    # Initialize variance
     sigma2[0] = omega / (1 - alpha - beta)
     r[0] = rng.normal(scale=np.sqrt(sigma2[0]))
 
@@ -224,6 +150,11 @@ def generate_garch_like(
     df.index.name = "t"
     return df
 
+
+# -------------------------------------------------------------------
+# Structural break
+# -------------------------------------------------------------------
+
 def generate_structural_break_series(
     n: int = 800,
     break_point: int = 400,
@@ -234,17 +165,7 @@ def generate_structural_break_series(
     seed: int | None = None,
 ) -> pd.DataFrame:
     """
-    Generate an AR(1)-type series with a single structural break in the mean.
-
-    For t < break_point:
-        x_t = mu1 + phi * (x_{t-1} - mu1) + eps_t
-    For t >= break_point:
-        x_t = mu2 + phi * (x_{t-1} - mu2) + eps_t
-
-    Returns:
-        DataFrame with columns:
-            - value: the series
-            - regime: 0 (pre-break) or 1 (post-break)
+    AR(1)-type series with structural break in mean.
     """
     rng = np.random.default_rng(seed)
 
@@ -254,25 +175,21 @@ def generate_structural_break_series(
     x = np.zeros(n)
     regimes = np.zeros(n, dtype=int)
 
-    # initialize at first mean
     x[0] = mu1 + rng.normal(scale=sigma)
 
     for t in range(1, n):
-        if t < break_point:
-            mu = mu1
-            regimes[t] = 0
-        else:
-            mu = mu2
-            regimes[t] = 1
-
+        mu = mu1 if t < break_point else mu2
+        regimes[t] = 0 if t < break_point else 1
         x[t] = mu + phi * (x[t - 1] - mu) + rng.normal(scale=sigma)
 
     df = pd.DataFrame({"value": x, "regime": regimes})
     df.index.name = "t"
     return df
 
-import numpy as np
-import pandas as pd
+
+# -------------------------------------------------------------------
+# VAR(1)
+# -------------------------------------------------------------------
 
 def generate_var1(
     n: int = 800,
@@ -282,34 +199,17 @@ def generate_var1(
     seed: int | None = None,
 ) -> pd.DataFrame:
     """
-    Generate a 2D VAR(1) process:
-
-        x_t = mu + A x_{t-1} + eps_t
-
-    where x_t is 2-dimensional, A is 2x2, eps_t ~ N(0, sigma^2 I).
-
-    Args:
-        n: length of the series
-        A: 2x2 coefficient matrix. If None, a stable default is used.
-        mu: 2D mean vector. If None, zeros are used.
-        sigma: standard deviation of the noise innovations.
-        seed: random seed.
-
-    Returns:
-        DataFrame with columns ['y1', 'y2'].
+    Generate a 2D VAR(1) process.
     """
     rng = np.random.default_rng(seed)
 
     if A is None:
-        # A reasonably stable matrix with some cross-effects
-        A = np.array([[0.5, 0.2],
-                      [-0.3, 0.4]], dtype=float)
+        A = np.array([[0.5, 0.2], [-0.3, 0.4]], dtype=float)
 
     if mu is None:
         mu = np.array([0.0, 0.0], dtype=float)
 
     x = np.zeros((n, 2), dtype=float)
-    # start near the mean
     x[0] = mu + rng.normal(scale=sigma, size=2)
 
     for t in range(1, n):
@@ -320,26 +220,18 @@ def generate_var1(
     df.index.name = "t"
     return df
 
+
+# -------------------------------------------------------------------
+# Logistic map (chaos)
+# -------------------------------------------------------------------
+
 def generate_logistic_map(
     n: int = 800,
     r: float = 3.9,
     x0: float = 0.2,
 ) -> pd.Series:
     """
-    Generate a logistic map time series:
-
-        x_{t+1} = r * x_t * (1 - x_t)
-
-    For r in (3.6, 4.0), the system is chaotic: deterministic but
-    highly sensitive to initial conditions.
-
-    Args:
-        n: length of the series
-        r: logistic map parameter (3.9 is a classic chaotic choice)
-        x0: initial value in (0, 1)
-
-    Returns:
-        pd.Series with index t = 0..n-1.
+    Generate logistic map series.
     """
     x = np.zeros(n, dtype=float)
     x[0] = x0
@@ -352,6 +244,11 @@ def generate_logistic_map(
     s.name = "value"
     return s
 
+
+# -------------------------------------------------------------------
+# Lorenz attractor
+# -------------------------------------------------------------------
+
 def generate_lorenz(
     n_steps: int = 10000,
     dt: float = 0.01,
@@ -363,23 +260,7 @@ def generate_lorenz(
     z0: float = 1.0,
 ) -> pd.DataFrame:
     """
-    Generate a trajectory of the Lorenz system using simple Euler integration.
-
-    Lorenz system:
-        dx/dt = sigma * (y - x)
-        dy/dt = x * (rho - z) - y
-        dz/dt = x * y - beta * z
-
-    For classic chaotic behaviour, use rho = 28, sigma = 10, beta = 8/3.
-
-    Args:
-        n_steps: number of time steps
-        dt: integration step size
-        sigma, rho, beta: Lorenz parameters
-        x0, y0, z0: initial conditions
-
-    Returns:
-        DataFrame with columns ['x', 'y', 'z'] indexed by step.
+    Generate Lorenz system trajectory via Euler integration.
     """
     xs = np.zeros(n_steps, dtype=float)
     ys = np.zeros(n_steps, dtype=float)

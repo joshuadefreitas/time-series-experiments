@@ -1,7 +1,7 @@
 """
 Machine-learning forecasting models based on lag features.
 
-Currently:
+Models:
 - RandomForestRegressor (scikit-learn)
 - XGBRegressor (xgboost)
 - LGBMRegressor (lightgbm)
@@ -13,7 +13,6 @@ All models follow the same pattern:
 """
 
 from typing import Tuple
-
 import numpy as np
 import pandas as pd
 
@@ -38,20 +37,16 @@ except ImportError:
 
 
 # ---------------------------------------------------------------------------
-# Helper: build lag matrix
+# Helper: build lag matrix with named columns
 # ---------------------------------------------------------------------------
 
 def _build_lag_matrix(
     series: pd.Series,
     n_lags: int,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> Tuple[pd.DataFrame, np.ndarray]:
     """
-    Build design matrix X and target y for lag-based forecasting.
-
-    X_t = [y_{t-1}, y_{t-2}, ..., y_{t-n_lags}]
-    y_t = y_t
-
-    We start at t = n_lags, so we use only rows with full lag history.
+    Build a lag feature matrix X (as DataFrame with column names)
+    and a target vector y.
     """
     y = series.values.astype(float)
     T = len(y)
@@ -61,15 +56,15 @@ def _build_lag_matrix(
             f"Series too short for n_lags={n_lags}: length={T}"
         )
 
-    X = []
+    rows = []
     target = []
+
     for t in range(n_lags, T):
-        X.append(y[t - n_lags:t])
+        rows.append(y[t - n_lags:t])
         target.append(y[t])
 
-    X = np.asarray(X)
-    target = np.asarray(target)
-    return X, target
+    X = pd.DataFrame(rows, columns=[f"lag_{i+1}" for i in range(n_lags)])
+    return X, np.asarray(target)
 
 
 def _iterative_forecast(
@@ -79,18 +74,17 @@ def _iterative_forecast(
     n_lags: int,
 ) -> float:
     """
-    Given a fitted model and the original series y, perform
-    iterative multi-step forecasting using the last n_lags values.
-
-    Returns:
-        Forecast for y_{T + horizon} as float.
+    Iterative multi-step forecasting with consistent feature naming.
     """
     last_window = y[-n_lags:].copy()
+
     for _ in range(horizon):
-        next_val = model.predict(last_window.reshape(1, -1))[0]
-        # roll: drop oldest, append new
+        X_next = pd.DataFrame([last_window], columns=[f"lag_{i+1}" for i in range(n_lags)])
+        pred = model.predict(X_next)[0]
+
+        # roll + append
         last_window = np.roll(last_window, -1)
-        last_window[-1] = next_val
+        last_window[-1] = pred
 
     return float(last_window[-1])
 
@@ -108,29 +102,12 @@ def rf_forecast(
     random_state: int = 42,
 ) -> float:
     """
-    Random Forest-based time series forecast using lag features.
-
-    Args:
-        series: Univariate time series.
-        horizon: Forecast horizon (steps ahead).
-        n_lags: Number of lags to use as predictors.
-        n_estimators: Number of trees in the forest.
-        max_depth: Maximum depth of each tree.
-        random_state: Random seed for reproducibility.
-
-    Returns:
-        Forecast for y_{T + horizon} as float.
+    Random Forest regression on lag features.
     """
     if not _HAS_SKLEARN_RF:
         raise ImportError(
-            "scikit-learn is required for rf_forecast. "
-            "Install it with `pip install scikit-learn`."
+            "scikit-learn is required for rf_forecast. Install with `pip install scikit-learn`."
         )
-
-    if series.empty:
-        raise ValueError("Cannot forecast: input series is empty")
-    if horizon <= 0:
-        raise ValueError(f"horizon must be > 0, got {horizon}")
 
     X, target = _build_lag_matrix(series, n_lags=n_lags)
 
@@ -142,8 +119,12 @@ def rf_forecast(
     )
     model.fit(X, target)
 
-    y = series.values.astype(float)
-    return _iterative_forecast(model, y, horizon=horizon, n_lags=n_lags)
+    return _iterative_forecast(
+        model,
+        y=series.values.astype(float),
+        horizon=horizon,
+        n_lags=n_lags,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -154,57 +135,37 @@ def xgb_forecast(
     series: pd.Series,
     horizon: int = 1,
     n_lags: int = 20,
-    max_depth: int = 4,
     n_estimators: int = 300,
+    max_depth: int = 5,
     learning_rate: float = 0.05,
-    subsample: float = 0.8,
-    colsample_bytree: float = 0.8,
     random_state: int = 42,
 ) -> float:
     """
-    XGBoost-based time series forecast using lag features.
-
-    Args:
-        series: Univariate time series.
-        horizon: Forecast horizon (steps ahead).
-        n_lags: Number of lags to use as predictors.
-        max_depth: Maximum tree depth.
-        n_estimators: Number of boosting rounds.
-        learning_rate: Learning rate (shrinkage).
-        subsample: Row subsampling.
-        colsample_bytree: Column subsampling per tree.
-        random_state: Random seed.
-
-    Returns:
-        Forecast for y_{T + horizon} as float.
+    XGBoost regression on lag features.
     """
     if not _HAS_XGBOOST:
         raise ImportError(
-            "xgboost is required for xgb_forecast. "
-            "Install it with `pip install xgboost`."
+            "xgboost is required for xgb_forecast. Install with `pip install xgboost`."
         )
-
-    if series.empty:
-        raise ValueError("Cannot forecast: input series is empty")
-    if horizon <= 0:
-        raise ValueError(f"horizon must be > 0, got {horizon}")
 
     X, target = _build_lag_matrix(series, n_lags=n_lags)
 
     model = XGBRegressor(
-        max_depth=max_depth,
         n_estimators=n_estimators,
+        max_depth=max_depth,
         learning_rate=learning_rate,
-        subsample=subsample,
-        colsample_bytree=colsample_bytree,
         random_state=random_state,
-        n_jobs=-1,
         objective="reg:squarederror",
+        verbosity=0,
     )
     model.fit(X, target)
 
-    y = series.values.astype(float)
-    return _iterative_forecast(model, y, horizon=horizon, n_lags=n_lags)
+    return _iterative_forecast(
+        model,
+        y=series.values.astype(float),
+        horizon=horizon,
+        n_lags=n_lags,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -221,18 +182,12 @@ def lgbm_forecast(
     random_state: int = 42,
 ) -> float:
     """
-    LightGBM-based time series forecast using lag features.
+    LightGBM regression on lag features.
     """
     if not _HAS_LIGHTGBM:
         raise ImportError(
-            "lightgbm is required for lgbm_forecast. "
-            "Install it with `pip install lightgbm`."
+            "lightgbm is required for lgbm_forecast. Install with `pip install lightgbm`."
         )
-
-    if series.empty:
-        raise ValueError("Cannot forecast: input series is empty")
-    if horizon <= 0:
-        raise ValueError(f"horizon must be > 0, got {horizon}")
 
     X, target = _build_lag_matrix(series, n_lags=n_lags)
 
@@ -241,10 +196,14 @@ def lgbm_forecast(
         learning_rate=learning_rate,
         n_estimators=n_estimators,
         random_state=random_state,
-        min_child_samples=10,   # helps avoid weird tiny leaves
-        verbose=-1,             # silence training logs
+        min_child_samples=10,
+        verbose=-1,
     )
     model.fit(X, target)
 
-    y = series.values.astype(float)
-    return _iterative_forecast(model, y, horizon=horizon, n_lags=n_lags)
+    return _iterative_forecast(
+        model,
+        y=series.values.astype(float),
+        horizon=horizon,
+        n_lags=n_lags,
+    )
