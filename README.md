@@ -120,7 +120,7 @@ Plots stored in `outputs/plots/`.
 ![Trend Seasonality](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/trend_seasonal_sarima_vs_actual.png)
 
 ### Horizon comparison (AR(1))  
-![AR1 Horizon](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/ar1_h10_vs_actual.png)
+![AR1 Horizon](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/ar1_lagreg_h10_vs_actual.png)
 
 ### Regime switching  
 ![Regime](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/regime_switching_mean_vs_actual.png)
