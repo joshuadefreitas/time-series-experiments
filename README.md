@@ -110,6 +110,9 @@ The framework provides:
 `src/experiments/exp_logistic_chaos.py`  
 `src/experiments/exp_lorenz_chaos.py`
 
+### **8. Real data (daily FX returns)**  
+`src/experiments/exp_fx_returns.py` — expects `data/real/eurusd.csv` with `date,price`
+
 ---
 
 ## Sample Plots
@@ -157,29 +160,25 @@ Plots stored in `outputs/plots/`.
 ## Project Structure
 
 ```text
-time-series-experiments/
+time-series-forecasting/
 ├── src/
-│   ├── simulators.py
-│   ├── models_basic.py
-│   ├── models_arima.py
-│   ├── models_ml.py
-│   ├── evaluation.py
-│   ├── plots.py
-│   └── experiments/
-│       ├── exp_ar1_horizons.py
-│       ├── exp_trend_seasonal_compare.py
-│       ├── exp_regime_switch_compare.py
-│       ├── exp_garch_compare.py
-│       ├── exp_structural_breaks.py
-│       ├── exp_var_basic.py
-│       ├── exp_logistic_chaos.py
-│       └── exp_lorenz_chaos.py
+│   ├── simulators.py         # synthetic generators
+│   ├── models_basic.py       # naive/mean/seasonal baselines
+│   ├── models_arima.py       # ARIMA/SARIMA helpers
+│   ├── models_advanced.py    # ETS, lag regression
+│   ├── models_ml.py          # RF / XGB / LGBM on lags (optional deps)
+│   ├── data_utils.py         # real data loaders (FX)
+│   ├── io_utils.py           # metrics/config persistence
+│   ├── evaluation.py         # rolling-origin + metrics
+│   ├── plots.py              # matplotlib helpers
+│   └── experiments/          # runnable scripts (synthetic + real)
 ├── docs/
 ├── data/
 │   ├── simulated/
-│   └── real/
+│   └── real/                 # place real datasets (e.g., eurusd.csv)
 ├── outputs/
-│   └── plots/
+│   ├── plots/
+│   └── metrics/
 └── requirements.txt
 ```
 
@@ -188,8 +187,8 @@ time-series-experiments/
 ## Installation
 
 ```bash
-git clone https://github.com/joshuadefreitas/time-series-experiments.git
-cd time-series-experiments
+git clone https://github.com/joshuadefreitas/time-series-forecasting.git
+cd time-series-forecasting
 pip install -r requirements.txt
 ```
 
@@ -209,6 +208,14 @@ Each experiment:
 - performs rolling-origin evaluation  
 - saves plots in `outputs/plots/`  
 - prints metrics and interpretation  
+
+Real-data quickstart (FX returns):
+```bash
+# place data/real/eurusd.csv with columns: date, price
+# or let the script fetch EURUSD=X via yfinance if missing
+python -m src.experiments.exp_fx_returns
+```
+Outputs: plots in `outputs/plots/`, metrics JSON in `outputs/metrics/`.
 
 ---
 
@@ -248,6 +255,7 @@ Optional:
 - scikit-learn  
 - xgboost  
 - lightgbm  
+- yfinance (optional, for live FX fetch fallback)
 
 ---
 

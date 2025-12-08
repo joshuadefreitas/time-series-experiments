@@ -13,6 +13,8 @@ from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.arima.model import ARIMAResults
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
 
+_WARNED_NONCONVERGE = False
+
 
 def fit_arima(
     series: pd.Series,
@@ -29,31 +31,35 @@ def fit_arima(
             f"Insufficient observations: {len(series)} provided, ARIMA requires at least 2"
         )
 
-    # Suppress only convergence warnings (not all warnings!)
+    # Suppress only known harmless SARIMA startup warnings and convergence noise.
     with warnings.catch_warnings():
-    # suppress only known harmless SARIMA warnings
         warnings.filterwarnings(
             "ignore",
             message="Too few observations to estimate starting parameters for seasonal ARMA",
-            category=UserWarning
+            category=UserWarning,
         )
         warnings.filterwarnings(
             "ignore",
-        message="Non-invertible starting seasonal moving average",
-        category=UserWarning
-    )
-    # DO NOT suppress convergence warnings
-    model = ARIMA(series, order=order, seasonal_order=seasonal_order)
-    result = model.fit()
+            message="Non-invertible starting seasonal moving average",
+            category=UserWarning,
+        )
+        warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
+        model = ARIMA(series, order=order, seasonal_order=seasonal_order)
+        result = model.fit()
 
-    # Surface non-convergence explicitly
-    if hasattr(result, "mle_retvals"):
-        if not result.mle_retvals.get("converged", True):
-            warnings.warn(
-                "ARIMA fit did not converge — forecasts may be unreliable.",
-                RuntimeWarning
-            )
+    # Surface non-convergence explicitly (even though we suppress the warning)
+    global _WARNED_NONCONVERGE
+    if (
+        hasattr(result, "mle_retvals")
+        and not result.mle_retvals.get("converged", True)
+        and not _WARNED_NONCONVERGE
+    ):
+        warnings.warn(
+            "ARIMA fit did not converge — forecasts may be unreliable.",
+            RuntimeWarning,
+        )
+        _WARNED_NONCONVERGE = True
 
     return result
 
@@ -73,6 +79,9 @@ def arima_forecast(
         raise ValueError(f"Forecast horizon must be positive, got {horizon}")
     if not isinstance(horizon, int):
         raise TypeError(f"Forecast horizon must be integer, got {type(horizon).__name__}")
+
+    # statsmodels ARIMA prefers a simple integer index; drop DatetimeIndex to avoid warnings
+    series = series.reset_index(drop=True)
 
     result = fit_arima(series, order=order, seasonal_order=seasonal_order)
     forecast = result.forecast(steps=horizon)
