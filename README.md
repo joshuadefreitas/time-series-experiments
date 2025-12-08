@@ -212,7 +212,7 @@ Each experiment:
 Real-data quickstart (FX returns):
 ```bash
 # place data/real/eurusd.csv with columns: date, price
-# or let the script fetch EURUSD=X via yfinance if missing
+# data/real is gitignored; you can also let the script fetch EURUSD=X via yfinance if missing
 python -m src.experiments.exp_fx_returns
 ```
 Outputs: plots in `outputs/plots/`, metrics JSON in `outputs/metrics/`.
