@@ -42,7 +42,6 @@ def fit_arima(
         message="Non-invertible starting seasonal moving average",
         category=UserWarning
     )
-        
     # DO NOT suppress convergence warnings
     model = ARIMA(series, order=order, seasonal_order=seasonal_order)
     result = model.fit()
