@@ -20,7 +20,7 @@ venv/
 # Uncomment above to ignore all plots, or keep example plots visible
 
 # Ignore real-world datasets (may contain sensitive/large data)
-# But allow .gitkeep to preserve directory structure
+# Allow placeholder to keep directory
 data/real/*
 !data/real/.gitkeep
 
