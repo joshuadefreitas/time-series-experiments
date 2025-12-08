@@ -1,200 +1,114 @@
-# Time-Series Forecasting Experiments: ARIMA, volatility, structural breaks, VAR, chaos
+# Time-Series Forecasting Experiments
 
-![Python](https://img.shields.io/badge/python-3.10%2B-blue)
-![Status](https://img.shields.io/badge/status-active-success)
-![License](https://img.shields.io/badge/license-MIT-lightgrey)
-![Focus](https://img.shields.io/badge/focus-time--series%20%7C%20econometrics%20%7C%20simulation-orange)
-![NumPy](https://img.shields.io/badge/numpy-1.x-blue)
-![statsmodels](https://img.shields.io/badge/statsmodels-0.x-green)
-![Matplotlib](https://img.shields.io/badge/matplotlib-3.x-yellow)
-![Code Style](https://img.shields.io/badge/code%20style-black-black)
+A compact set of experiments designed to understand how different forecasting models behave under controlled conditions.  
+Not a showcase, not a “look at my project” portfolio piece — just clean experiments that explain model behaviour.
 
-A practical forecasting project focused on understanding how different models behave under controlled conditions.
+## Focus
+ARIMA/SARIMA · Volatility · Structural Breaks · VAR · Nonlinear Dynamics · Chaos
 
-The experiments cover a wide range of time-series behaviour:
+## Overview
 
-- **ARIMA & SARIMA** (memory, trend, seasonality)
-- **Volatility & Regime Switching**
-- **Structural Breaks**
-- **Multivariate VAR dynamics**
-- **Nonlinear & Chaotic systems** (logistic map, Lorenz attractor)
+The project studies how forecasting models react when the underlying data-generating process changes.  
+Everything starts from synthetic data so the ground truth is always known.
 
-The goal is to understand *why* models behave the way they do under different data-generating processes, rather than just optimising metrics.
+Covered systems include:
 
-## Key Features
+- **AR(1)** memory and horizon decay  
+- **Trend + seasonality** with SARIMA  
+- **Variance regimes** (switching volatility)  
+- **GARCH‑like clustering**  
+- **Structural breaks**  
+- **VAR(1)** multivariate interaction  
+- **Nonlinear/chaotic series** (logistic map, Lorenz attractor)
 
-- Modular **synthetic simulators** (AR(1), trend+seasonality, GARCH-like, regime switching, VAR, chaos)
-- Correct **rolling-origin evaluation** (walk‑forward validation)
-- Systematic comparison of baselines vs ARIMA/SARIMA and multivariate approaches
-- Clear documentation in the `docs/` directory:
-  - `lessons.md` — key concepts and takeaways  
-  - `experiments.md` — experiments overview  
-  - `gallery.md` — plot gallery  
-  - `extending.md` — how to add models/experiments  
-
-The project will later expand to **real-world datasets** (e.g., FX returns, macroeconomic series, demand forecasting) using the same experimental structure.
+The goal is simple: understand what works *and why* — not chase leaderboard metrics.
 
 ---
 
-## Summary
+## Current Experiments
 
-This project shows how different forecasting models behave under controlled time-series settings. It highlights:
+### AR(1) Horizon Dependence  
+How predictive power fades with longer horizons.
 
-- Working with synthetic data to isolate effects and understand model behaviour  
-- Using proper rolling-origin (walk-forward) validation  
-- Simulating different data-generating mechanisms  
-- Comparing baseline, ARIMA/SARIMA, volatility-aware, multivariate, and chaotic settings  
-- Keeping the codebase small, modular, and easy to extend  
+`src/experiments/exp_ar1_horizons.py`
 
-The aim is clarity: how models react when the underlying system changes.
+### Trend + Seasonality  
+SARIMA vs naïve and mean baselines.
 
----
+`src/experiments/exp_trend_seasonal_compare.py`
 
-## Table of Contents
+### Regime Switching  
+Why volatility—not levels—carries the structure.
 
-- [Purpose](#purpose-of-the-project)
-- [Current Experiments](#current-capabilities)
-- [Sample Plots](#sample-plots)
-- [Documentation](#documentation)
-- [Roadmap](#roadmap-upcoming-milestones)
-- [Project Structure](#project-structure)
-- [Installation](#installation)
-- [Running Experiments](#running-experiments)
-- [Methodology](#methodology)
-- [Why Start With Synthetic Data](#why-start-with-synthetic-data)
-- [Dependencies](#dependencies)
-- [License](#license)
+`src/experiments/exp_regime_switch_compare.py`
 
----
+### GARCH-like Volatility  
+Volatility clustering and fat‑tailed behaviour.
 
-## Purpose of the Project
+`src/experiments/exp_garch_compare.py`
 
-The repository is built to answer practical forecasting questions:
+### Structural Breaks  
+How forecasters behave when the mean jumps.
 
-- When do simple models outperform complex ones?  
-- How much does forecasting horizon matter?  
-- When does seasonality dominate?  
-- Why are financial returns nearly unpredictable?  
-- What happens when a structural break occurs?  
-- Can chaotic systems be forecast beyond very short horizons?  
-- When does multivariate modelling actually help?
+`src/experiments/exp_structural_breaks.py`
 
-The framework includes:
+### VAR  
+When multivariate dynamics actually help.
 
-- Controlled synthetic simulators  
-- Rolling-origin evaluation  
-- A small library of models  
-- Experiments with interpretable results and plots  
+`src/experiments/exp_var_basic.py`
 
----
+### Chaos  
+Deterministic systems with vanishing predictability.
 
-## Current Capabilities
-
-### 1. AR(1) Memory + Horizon Dependence
-How predictive power decays as horizons grow.
-
-**Script:** `src/experiments/exp_ar1_horizons.py`
-
----
-
-### 2. Trend & Seasonality (SARIMA vs Baselines)
-Importance of modelling explicit seasonal structure.
-
-**Script:** `src/experiments/exp_trend_seasonal_compare.py`
-
----
-
-### 3. Regime Switching (Variance Shifts)
-Why volatility, not levels, often contains the real structure.
-
-**Script:** `src/experiments/exp_regime_switch_compare.py`
-
----
-
-### 4. GARCH-like Volatility Clustering
-Synthetic returns with volatility persistence.
-
-**Script:** `src/experiments/exp_garch_compare.py`
-
----
-
-### 5. Structural Breaks
-Shows how global models struggle when the underlying mean shifts.
-
-**Script:** `src/experiments/exp_structural_breaks.py`
-
----
-
-### 6. Multivariate Forecasting (VAR)
-Captures cross-series interactions missed by univariate models.
-
-**Script:** `src/experiments/exp_var_basic.py`
-
----
-
-### 7. Chaos & Nonlinear Dynamics
-Logistic maps and the Lorenz system: limits of predictability.
-
-**Scripts:**
-- `src/experiments/exp_logistic_chaos.py`
-- `src/experiments/exp_lorenz_chaos.py`
+`src/experiments/exp_logistic_chaos.py`  
+`src/experiments/exp_lorenz_chaos.py`
 
 ---
 
 ## Sample Plots
 
-Plots are stored in `outputs/plots/`. A few examples:
+Plots live in `outputs/plots/`.  
+A few highlights:
 
-### SARIMA on Trend + Seasonality  
-![Trend Seasonality](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/trend_seasonal_sarima_vs_actual.png)
-
-### Horizon Comparison (AR(1))  
-![AR1 Horizon](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/ar1_h10_vs_actual.png)
-
-### Regime Switching  
-![Regime Switching](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/regime_switching_mean_vs_actual.png)
-
-### GARCH-like Volatility  
-![GARCH](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/garch_mean_forecast.png)
-
-### Lorenz Attractor (Chaos)  
-![Lorenz](https://raw.githubusercontent.com/joshuadefreitas/time-series-experiments/main/outputs/plots/lorenz_attractor.png)
+- SARIMA on trend + seasonality  
+- AR(1) horizon comparison  
+- Regime switching forecasts  
+- GARCH volatility paths  
+- Lorenz attractor (3D chaotic trajectory)
 
 ---
 
 ## Documentation
 
-Additional documentation lives in the `docs/` folder:
+All extra notes are in `docs/`:
 
-- **Key Lessons & Concepts:** `docs/lessons.md`  
-- **Experiment Overview:** `docs/experiments.md`  
-- **Plot Gallery:** `docs/gallery.md`  
-- **Extending the Framework:** `docs/extending.md`  
-
-These files summarise what each experiment teaches, show selected plots, and explain how to plug in new simulators or models.
+- `lessons.md` — distilled takeaways  
+- `experiments.md` — experiment descriptions  
+- `gallery.md` — selected visualisations  
+- `extending.md` — how to add more models or simulators  
 
 ---
 
-## Roadmap (Upcoming Milestones)
+## Roadmap
 
-- More nonlinear systems (e.g. Henon map, Mackey–Glass)  
-- Cointegration and error-correction models  
-- State-space modelling and Kalman filtering  
-- Real-world datasets (electricity, FX, macro indicators)  
-- Optional: light-weight live forecasting pipeline with scheduled runs  
+- Additional nonlinear maps (Henon, Mackey–Glass)  
+- Cointegration and error‑correction experiments  
+- State‑space + Kalman filtering  
+- Real‑world series (FX, macro, demand)  
+- Optional lightweight live‑forecast runner  
 
 ---
 
 ## Project Structure
 
-```text
+```
 time-series-experiments/
 ├── src/
 │   ├── simulators.py
 │   ├── models_basic.py
 │   ├── models_arima.py
+│   ├── models_ml.py
 │   ├── evaluation.py
-│   ├── plots.py
 │   └── experiments/
 │       ├── exp_ar1_horizons.py
 │       ├── exp_trend_seasonal_compare.py
@@ -204,11 +118,11 @@ time-series-experiments/
 │       ├── exp_var_basic.py
 │       ├── exp_logistic_chaos.py
 │       └── exp_lorenz_chaos.py
+├── outputs/
+│   └── plots/
 ├── data/
 │   ├── simulated/
 │   └── real/
-├── outputs/
-│   └── plots/
 ├── docs/
 └── requirements.txt
 ```
@@ -217,7 +131,7 @@ time-series-experiments/
 
 ## Installation
 
-```bash
+```
 git clone https://github.com/joshuadefreitas/time-series-experiments.git
 cd time-series-experiments
 pip install -r requirements.txt
@@ -225,59 +139,51 @@ pip install -r requirements.txt
 
 ---
 
-## Running Experiments
+## Running an Experiment
 
 Example:
 
-```bash
+```
 python -m src.experiments.exp_ar1_horizons
 ```
 
-Each experiment:
+Each script:
 
 - generates synthetic data  
-- runs walk-forward evaluation  
-- stores plots in `outputs/plots/`  
-- prints metrics and a short interpretation  
+- runs walk‑forward evaluation  
+- saves plots  
+- prints a short interpretation  
 
 ---
 
-## Methodology
+## Methodology Notes
 
 ### Rolling-Origin Evaluation  
-Expanding or sliding windows ensure no leakage and realistic forecasting conditions.
+Walk‑forward validation ensures no leakage and keeps conditions realistic.
 
 ### Metrics  
-
-- **MAE** — average absolute error  
-- **RMSE** — penalises larger errors  
-- **MAPE** — percentage error (careful near zero and sign changes)  
-
----
-
-## Why Start With Synthetic Data?
-
-Synthetic datasets make it possible to:
-
-- Control the data-generating mechanism  
-- Know in advance which model “should” work best  
-- Diagnose why models fail or succeed  
-- Learn structure before dealing with real-world noise  
-
-Real datasets can later mirror these controlled settings.
+- MAE  
+- RMSE  
+- MAPE (treated carefully near zero)  
 
 ---
 
-## Dependencies
+## Why Synthetic Data First?
 
-- numpy  
-- pandas  
-- matplotlib  
-- statsmodels  
+Because it isolates what you want to learn:
+
+- what memory looks like  
+- what seasonality does  
+- how breaks ruin global forecasts  
+- why volatility matters  
+- when multivariate structure helps  
+- where predictability simply ends  
+
+Only once that’s clear does it make sense to move to real data.
 
 ---
 
 ## License
 
 MIT  
-Free for educational and analytical use.
+Free for research, learning, and experimentation.
