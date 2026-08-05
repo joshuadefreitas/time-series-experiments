@@ -7,8 +7,7 @@
 ![NumPy](https://img.shields.io/badge/numpy-1.x-blue)
 ![statsmodels](https://img.shields.io/badge/statsmodels-0.14-green)
 
-A practical collection of forecasting experiments designed to study how different models behave under controlled conditions.  
-The focus is on *understanding behaviour*, not tuning for leaderboard performance.
+A reproducible collection of forecasting experiments designed to study how different models behave under controlled conditions. The focus is on understanding behavior, not tuning for leaderboard performance.
 
 The project covers a wide range of time-series dynamics:
 
@@ -32,6 +31,10 @@ The project covers a wide range of time-series dynamics:
   - `extending.md` — how to add models or experiments  
 
 The structure is simple, extendable, and ready for future real-world datasets.
+
+## Why this project exists
+
+Forecasting results are easy to overstate when the data-generating process is unclear. This project makes the process inspectable by controlling the signal, using walk-forward evaluation, and keeping model comparisons next to the plots and lessons they produce.
 
 ---
 
@@ -187,8 +190,8 @@ time-series-forecasting/
 ## Installation
 
 ```bash
-git clone https://github.com/joshuadefreitas/time-series-forecasting.git
-cd time-series-forecasting
+git clone https://github.com/joshuadefreitas/time-series-experiments.git
+cd time-series-experiments
 pip install -r requirements.txt
 ```
 
